@@ -139,5 +139,11 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	printf("Offsets: %.5f, %.5f, %.5f\n", x_os, y_os, z_os);
+	FILE *f;
+	f = fopen("offsets.txt", "w");
+	fprintf(f, "x %.5f\n", x_os);
+	fprintf(f, "y %.5f\n", y_os);
+	fprintf(f, "z %.5f\n", z_os);
+	fclose(f);
+	printf("Finished!");
 }

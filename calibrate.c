@@ -56,6 +56,8 @@ void avgData(int h, int bufferSize, double* avgX, double* avgY, double* avgZ, do
 			y = (data[4]<<8) | (data[3]);
 			z = (data[6]<<8) | (data[5]);
 
+			//printf("%d, %d, %d\n", x, y, z);
+
 			buffAx = buffAx + xOS + (double)x;
 			buffAy = buffAy + yOS + (double)y;
 			buffAz = buffAz + zOS + (double)z;
@@ -71,10 +73,9 @@ void avgData(int h, int bufferSize, double* avgX, double* avgY, double* avgZ, do
 int main(int argc, char *argv[]) {
 
 	double freq = 100;
-	double error = 2.0;
+	double error = 1.0;
 	int samples = 10;
 	int h;
-	double delay = 0.1;
 	char data[7];
 
 	if(gpioInitialise() < 0) {
@@ -96,10 +97,10 @@ int main(int argc, char *argv[]) {
 	data[1] = 0x08;
 	writeBytes(h, data, 2);
 
-	double dt = 1.0/freq;
-
 	double avg_x, avg_y, avg_z;
 	double x_os = 0.0, y_os = 0.0, z_os = 0.0;
+
+	printf("Calibrating...\n");
 
 	avgData(h, samples, &avg_x, &avg_y, &avg_z, 0.0, 0.0, 0.0);
 
@@ -113,6 +114,7 @@ int main(int argc, char *argv[]) {
 		avgData(h, samples, &avg_x, &avg_y, &avg_z, x_os, y_os, z_os);
 
 		printf("%.5f, %.5f, %.5f\n", x_os, y_os, z_os);
+		//printf("%.5f, %.5f, %.5f\n", avg_x, avg_y, avg_z);
 
 		if(fabs(avg_x)<=error) {
 			ready+=1;

@@ -37,7 +37,7 @@ int main(int argc, char *argv[]) {
 	double aFreq = defaultFreq;
 	double aTime = defaultTime;
 	double xOff = 0.0, yOff = 0.0, zOff = 0.0;
-
+	char fileName[256] = "";
 	for(i=1; i < argc; i++) {
 		if(strcmp(argv[i], "-f") == 0) {
 			if(i+1 <= argc-1) {
@@ -55,6 +55,14 @@ int main(int argc, char *argv[]) {
 			if(i+1 <= argc-1) {
 				i++;
 				aTime = atof(argv[i]);
+			} else {
+				printf("%s missing arguments!\n", argv[i]);
+				return 1;
+			}
+		} else if(strcmp(argv[i], "-n") == 0) {
+			if(i+1 <= argc-1) {
+				i++;
+				strcpy(fileName, argv[i]);
 			} else {
 				printf("%s missing arguments!\n", argv[i]);
 				return 1;
@@ -90,6 +98,7 @@ int main(int argc, char *argv[]) {
 
 	int bufferSize = aFreq * aTime;
 	int spiBufferSize = spiFreqRef * aTime;
+	int scaleFactor = 64;
 	int h, bytes;
 	char data[7];
 	int16_t x, y, z;
@@ -112,7 +121,7 @@ int main(int argc, char *argv[]) {
 	writeBytes(h, data, 2);
 
 	data[0] = DATA_FORMAT;
-	data[1] = 0x02;
+	data[1] = 0x02; //8g
 	writeBytes(h, data, 2);
 
 	double *st, *sx, *sy, *sz;
@@ -121,24 +130,22 @@ int main(int argc, char *argv[]) {
 	sy = malloc(bufferSize * sizeof(double));
 	sz = malloc(bufferSize * sizeof(double));
 
-	double *rt, *rx, *ry, *rz;
+	double *rt;
+	int16_t *rx, *ry, *rz;
+
 	rt = malloc(spiBufferSize * sizeof(double));
-	rx = malloc(spiBufferSize * sizeof(double));
-	ry = malloc(spiBufferSize * sizeof(double));
-	rz = malloc(spiBufferSize * sizeof(double));
+	rx = malloc(spiBufferSize * sizeof(int16_t));
+	ry = malloc(spiBufferSize * sizeof(int16_t));
+	rz = malloc(spiBufferSize * sizeof(int16_t));
 
 	for(i=0; i < spiBufferSize; i++) {
 		data[0] = DATAX0;
 		bytes = readBytes(h, data, 7);
 		if(bytes == 7) {
-			x = (data[2]<<8) | (data[1]);
-			y = (data[4]<<8) | (data[3]);
-			z = (data[6]<<8) | (data[5]);
-
+			rx[i] = (data[2]<<8 | data[1]);
+			ry[i] = (data[4]<<8 | data[3]);
+			rz[i] = (data[6]<<8 | data[5]);
 			rt[i] = time_time();
-			rx[i] = (double) x;
-			ry[i] = (double) y;
-			rz[i] = (double) z;
 		}
 	}
 
@@ -157,9 +164,9 @@ int main(int argc, char *argv[]) {
 	nJ = 0;
 	nTime = rt[nJ];
 
-	sx[0] = (double) rx[nJ];
-	sy[0] = (double) ry[nJ];
-	sz[0] = (double) rz[nJ];
+	sx[0] = (double)(rx[nJ]+xOff)/scaleFactor;
+	sy[0] = (double)(ry[nJ]+yOff)/scaleFactor;
+	sz[0] = (double)(rz[nJ]+zOff)/scaleFactor;
 	st[0] = cTime;
 
 	for(i=1; i < bufferSize; i++) {
@@ -175,12 +182,20 @@ int main(int argc, char *argv[]) {
 			}
 		}
 		st[i] = cTime;
-		sx[i] = (double)rx[nJ];
-		sy[i] = (double)ry[nJ];
-		sz[i] = (double)rz[nJ];
+		sx[i] = (double)(rx[nJ]+xOff)/scaleFactor;
+		sy[i] = (double)(ry[nJ]+yOff)/scaleFactor;
+		sz[i] = (double)(rz[nJ]+zOff)/scaleFactor;
 	}
 
-	for(i=0;i<100;i++) {
-		printf("%.8f time, %.3f\n", st[i], sx[i]);
+	FILE *file;
+	file = fopen(fileName, "w");
+	fprintf(file, "sampleRate %.3f\n", aFreq);
+	fprintf(file, "samples %d\n", bufferSize);
+	fprintf(file, "dt %.5f\n\n", dt);
+	fprintf(file, "time, x, y, z\n");
+	for(i=0;i < bufferSize;i++) {
+		fprintf(file, "%.8f, %.6f, %.6f, %.6f\n", st[i], sx[i], sy[i], sz[i]);
 	}
+	fclose(file);
+	return 0;
 }

@@ -189,12 +189,12 @@ int main(int argc, char *argv[]) {
 
 	FILE *file;
 	file = fopen(fileName, "w");
-	fprintf(file, "sampleRate %.3f\n", aFreq);
-	fprintf(file, "samples %d\n", bufferSize);
-	fprintf(file, "dt %.5f\n\n", dt);
-	fprintf(file, "time, x, y, z\n");
+	fprintf(file, "sampleRate,%.3f\n", aFreq);
+	fprintf(file, "samples,%d\n", bufferSize);
+	fprintf(file, "dt,%.5f\n", dt);
+	fprintf(file, "time,x,y,z\n");
 	for(i=0;i < bufferSize;i++) {
-		fprintf(file, "%.8f, %.6f, %.6f, %.6f\n", st[i], sx[i], sy[i], sz[i]);
+		fprintf(file, "%.8f,%.6f,%.6f,%.6f\n", st[i], sx[i], sy[i], sz[i]);
 	}
 	fclose(file);
 	return 0;

@@ -140,7 +140,8 @@ int main(int argc, char *argv[]) {
 	}
 
 	FILE *f;
-	f = fopen("offsets.txt", "w");
+	f = fopen("offsets.ini", "w");
+	fprintf("[VALUES]");
 	fprintf(f, "x %.5f\n", x_os);
 	fprintf(f, "y %.5f\n", y_os);
 	fprintf(f, "z %.5f\n", z_os);

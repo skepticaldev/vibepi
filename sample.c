@@ -37,7 +37,7 @@ int main(int argc, char *argv[]) {
 	double aFreq = defaultFreq;
 	double aTime = defaultTime;
 	double xOff = 0.0, yOff = 0.0, zOff = 0.0;
-	char fileName[256] = "";
+	char path[256] = "";
 	for(i=1; i < argc; i++) {
 		if(strcmp(argv[i], "-f") == 0) {
 			if(i+1 <= argc-1) {
@@ -59,10 +59,10 @@ int main(int argc, char *argv[]) {
 				printf("%s missing arguments!\n", argv[i]);
 				return 1;
 			}
-		} else if(strcmp(argv[i], "-n") == 0) {
+		} else if(strcmp(argv[i], "-p") == 0) {
 			if(i+1 <= argc-1) {
 				i++;
-				strcpy(fileName, argv[i]);
+				strcpy(path, argv[i]);
 			} else {
 				printf("%s missing arguments!\n", argv[i]);
 				return 1;
@@ -188,10 +188,10 @@ int main(int argc, char *argv[]) {
 	}
 
 	FILE *file;
-	file = fopen(fileName, "w");
+	file = fopen(path, "w");
 	fprintf(file, "sampleRate,%.3f\n", aFreq);
 	fprintf(file, "samples,%d\n", bufferSize);
-	fprintf(file, "dt,%.5f\n", dt);
+	fprintf(file, "dt,%.8f\n", dt);
 	fprintf(file, "time,x,y,z\n");
 	for(i=0;i < bufferSize;i++) {
 		fprintf(file, "%.8f,%.6f,%.6f,%.6f\n", st[i], sx[i], sy[i], sz[i]);

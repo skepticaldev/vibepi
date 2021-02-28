@@ -3,6 +3,7 @@ import numpy as np
 import configparser
 import time
 import csv
+import termplotlib as tpl
 
 config = configparser.ConfigParser()
 offsets = configparser.ConfigParser()
@@ -105,8 +106,13 @@ while(i <= nSamples):
         for j in range(sr+1):
             writer.writerow([freq[j], fzhat[j]])
 
-    
-    if i==8:
+
+    fig = tpl.figure()
+    os.system(f'clear')
+    fig.plot(freq[0:sr], fzhat[0:sr], width=60, height=15)
+    fig.show()
+
+    if i == nSamples:
         index = np.argmax(fzhat[0:sr])
         print(freq[index], fzhat[index])
 

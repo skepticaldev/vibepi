@@ -30,8 +30,15 @@ fi = int(config['DEFAULT']['frequencyInterval'])
 # Spectrum Resolution 
 sr = int(config['DEFAULT']['spectrumResolution'])
 
+# Frequency Filter
+ff = int(config['DEFAULT']['frequencyfilter'])
+
 # BandWidth
 bw = fi/sr
+
+# Filter lines
+# Value to iterate through FFT array to filter low frequencies
+fl = int(ff/bw)
 
 # Acquisition Time
 aTime = 1/bw
@@ -87,6 +94,9 @@ while(i <= nSamples):
 
     freq = bw*np.arange(n)
 
+    for j in range(fl):
+        fzhat[j] = 0
+
     fftPath = dataDir+"/fft.csv"
     fftFile = os.path.join(_dir, fftPath)
 
@@ -112,10 +122,14 @@ while(i <= nSamples):
     fig.plot(freq[0:sr], fzhat[0:sr], width=60, height=15)
     fig.show()
 
-    if i == nSamples:
-        index = np.argmax(fzhat[0:sr])
-        print(freq[index], fzhat[index])
+    index = np.argmax(fzhat[0:sr])
+    print(freq[index], fzhat[index])
 
+    f = round(freq[index], 2)
+    a = round(fzhat[index], 2)
+    s = int(f*60)
+
+    os.system(f'python3 screen.py -a {a} -f {f} -s {s}')
     i+=1
 
 config['SYSTEM']['fileCount'] = str(fileCount+1);

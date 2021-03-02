@@ -157,6 +157,8 @@ int main(int argc, char *argv[]) {
 		rt[i] = rt[i]-sTime;
 	}
 
+	//printf("%.8f", rt[1]-rt[2]);
+
 	double cTime, nTime, tError;
 	int j, nJ;
 

@@ -19,19 +19,19 @@ zOff = offsets['VALUES']['z']
 fileCount = int(config['SYSTEM']['fileCount'])
 
 # Number of samples to average
-nSamples = int(config['DEFAULT']['nSamples'])
+nSamples = int(config['SAMPLING']['nSamples'])
 
 # Delay between samples
-delay = int(config['DEFAULT']['delay'])
+delay = int(config['SAMPLING']['delay'])
 
 # Frequency Interval
-fi = int(config['DEFAULT']['frequencyInterval'])
+fi = int(config['SAMPLING']['frequencyInterval'])
 
 # Spectrum Resolution 
-sr = int(config['DEFAULT']['spectrumResolution'])
+sr = int(config['SAMPLING']['spectrumResolution'])
 
 # Frequency Filter
-ff = int(config['DEFAULT']['frequencyfilter'])
+ff = int(config['SAMPLING']['frequencyfilter'])
 
 # BandWidth
 bw = fi/sr
@@ -88,16 +88,24 @@ while(i <= nSamples):
     
     # Processing
     # FFT
-    fzhat = np.abs(np.fft.fft(az,n))*(2/n)
+    fxhat = np.abs(np.fft.fft(ax,n))*(2/n)
+    fyhat = np.abs(np.fft.fft(ay,n))*(2/n)
+    fzhat = np.abs(np.fft.fft(az,n))*(2/n)   
+
     # PSD
+    xPSD = ((fxhat*np.conj(fxhat))/bw)*0.5
+    yPSD = ((fyhat*np.conj(fyhat))/bw)*0.5
     zPSD = ((fzhat*np.conj(fzhat))/bw)*0.5
 
     freq = bw*np.arange(n)
 
     for j in range(fl):
+        fxhat[j] = 0
+        fyhat[j] = 0
         fzhat[j] = 0
 
     fftPath = dataDir+"/fft.csv"
+
     fftFile = os.path.join(_dir, fftPath)
 
     if i>1 :
@@ -106,7 +114,11 @@ while(i <= nSamples):
             lineCount = 0
             for row in csvReader:
                 if lineCount>0:
-                    zfft = float(row[1])
+                    xfft = float(row[1])
+                    yfft = float(row[2])
+                    zfft = float(row[3])
+                    fxhat[lineCount-1] = (fxhat[lineCount-1] + xfft)/2
+                    fyhat[lineCount-1] = (fyhat[lineCount-1] + yfft)/2
                     fzhat[lineCount-1] = (fzhat[lineCount-1] + zfft)/2
                 lineCount+=1
 
@@ -114,7 +126,7 @@ while(i <= nSamples):
         writer = csv.writer(f, delimiter=',')
         writer.writerow(["frequency","fft"])
         for j in range(sr+1):
-            writer.writerow([freq[j], fzhat[j]])
+            writer.writerow([freq[j], fxhat[j], fyhat[j], fzhat[j]])
 
 
     fig = tpl.figure()
@@ -122,14 +134,22 @@ while(i <= nSamples):
     fig.plot(freq[0:sr], fzhat[0:sr], width=60, height=15)
     fig.show()
 
-    index = np.argmax(fzhat[0:sr])
-    print(freq[index], fzhat[index])
+    ix = np.argmax(fxhat[0:sr])
+    iy = np.argmax(fyhat[0:sr])
+    iz = np.argmax(fzhat[0:sr])
 
-    f = round(freq[index], 2)
-    a = round(fzhat[index], 2)
-    s = int(f*60)
+    print(freq[iz], fzhat[iz])
 
-    os.system(f'python3 screen.py -a {a} -f {f} -s {s}')
+    fx = round(freq[ix], 1)
+    fy = round(freq[iy], 1)
+    fz = round(freq[iz], 1)
+
+    ax = round(fxhat[ix], 2)
+    ay = round(fyhat[iy], 2)
+    az = round(fzhat[iz], 2)
+    s = int(fz*60)
+
+    os.system(f'python3 screen.py --ax {ax} --ay {ay} --az {az} --fx {fx} --fy {fy} --fz {fz} --spd {s}')
     i+=1
 
 config['SYSTEM']['fileCount'] = str(fileCount+1);

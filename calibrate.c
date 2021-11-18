@@ -72,7 +72,7 @@ void avgData(int h, int bufferSize, double* avgX, double* avgY, double* avgZ, do
 
 int main(int argc, char *argv[]) {
 
-	double freq = 100;
+	//double freq = 100;
 	double error = 1.0;
 	int samples = 10;
 	int h;
@@ -84,6 +84,8 @@ int main(int argc, char *argv[]) {
 	}
 
 	h = spiOpen(0, spiSpeed, 3);
+
+	printf("%i",h);
 
 	data[0] = BW_RATE;
 	data[1] = 0x0F; // 3200Hz Mode
